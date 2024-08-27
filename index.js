@@ -25,7 +25,7 @@ const server = http.createServer((request,response)=>{
 
         }
         else{
-            return response.end('no method');
+            return response.end('No method');
         }
     }
     else if(url === '/page'){
