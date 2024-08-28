@@ -1,0 +1,1 @@
+content is copied from fileA to fileB
