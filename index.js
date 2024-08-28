@@ -1,47 +1,37 @@
-//create a server
+//import the express module
 
-const http = require('http'); //commonjs method to import
+const express = require('express');
 
-//import http from 'http';//ES6 way to import 
+//create an express application
+const app = express();
 
-//create a server object
-const server = http.createServer((request,response)=>{
-    const{url,method} = request;
-
-    if(url === '/'){
-        //return response.end("welcome to page");
-        if(method === 'GET'){
-            return response.end("GET METHOD");
-
-        }
-
-        else if(method === 'POST'){
-            return response.end("POST METHOD");
-
-        }
-
-        else if(method === 'DELETE'){
-            return response.end("DELETE METHOD");
-
-        }
-        else{
-            return response.end('No method');
-        }
-    }
-    else if(url === '/page'){
-        return response.end("this is page endpoint");
-    }
-    
-    else{
-        return response.end("url not found");
-    }
-    /*console.log(request.method, request.url,request.headers);
-    console.log(request.body);
-    response.end("hello world");//write response to client*/
-
+//define the routes and their corresponding functions
+app.get('/',(req,res)=>{
+    res.send("GET METHOD!");
 });
 
-//start the server listening for request
-server.listen(3001,'localhost',()=>{
+app.put('/',(req,res)=>{
+    res.send("PUT METHOD!");
+});
+
+app.post('/',(req,res)=>{
+    res.send("POST METHOD!");
+});
+
+
+app.delete('/',(req,res)=>{
+    res.send("DELETE METHOD!");
+});
+
+
+//methods with endpoints
+app.get('/test',(req,res)=>{
+    res.send("GET METHOD in test endpoint!");
+});
+
+
+
+//start the server by listening on port for incoming requests
+app.listen(3001,"localhost",()=>{
     console.log("server is running on http://localhost:3001");
 });
