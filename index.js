@@ -24,13 +24,13 @@ app.post('/create', (req, res) => {
 
 app.get('/path',(req,res)=>{
    
-    const file = fs.readd('./files');
+    const file = fs.readdirSync('./files');
  
     res.send(file);
 
 })
 
 
-app.listen(3001, () => {
+app.listen(3001,'localhost', () => {
     console.log("server is running on http://localhost:3001");
 });
