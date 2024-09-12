@@ -1,64 +1,55 @@
-const companies = [
-    {
-        id: 1,
-        name: "Google",
-        location: "Mountain View, California",
-        email: "careers@google.com",
-        phone: "650-253-0000",
-        website: "https://careers.google.com",
-        createdAt: "2021-09-01T00:00:00Z",
-        updatedAt: "2021-09-01T00:00:00Z"
-    },
-    {
-        id: 2,
-        name: "Facebook",
-        location: "Menlo Park, California",
-        email: "careers@facebook.com",
-        phone: "650-543-4800",
-        website: "https://www.facebook.com/careers",
-        createdAt: "2021-09-01T00:00:00Z",
-        updatedAt: "2021-09-01T00:00:00Z"
-    },
-    {
-        id: 3,
-        name: "Amazon",
-        location: "Seattle, Washington",
-        email: "careers@amazon.com",
-        phone: "206-266-1000",
-        website: "https://www.amazon.jobs",
-        createdAt: "2021-09-01T00:00:00Z",
-        updatedAt: "2021-09-01T00:00:00Z"
-    },
-];
-
-
-
 const express = require('express');
-
 const app = express();
-
 app.use(express.json());
 
+let rooms = [];
+let bookings = [];
 
-// to get the companies info
-app.get('/companies',(req,res)=>{
-    res.send(companies);
-})
-
-//to update the new company in the array
-app.post('/companies',(req,res)=>{
-    const company = req.body;
-    company.id = companies[companies.length - 1].id + 1;
-    company.createdAt = new Date().toISOString();
-    company.updatedAt = new Date().toISOString();
-
-    companies.push(company);
-
-    res.json({message: "company created successfully"});
-
-})
-
-
-app.listen(3001, () => {
-    console.log("server is running on http://localhost:3001");
+// 1. Create a room
+app.post('/create-room', (req, res) => {
+    const { numberOfSeats, amenities, pricePerHour } = req.body;
+    const room = { id: rooms.length + 1, numberOfSeats, amenities, pricePerHour };
+    rooms.push(room);
+    res.status(201).json({ message: "Room created", room });
 });
+
+// 2. Book a room
+app.post('/book-room', (req, res) => {
+    const { customerName, date, startTime, endTime, roomId } = req.body;
+
+    // Check if the room is already booked at the same date and time
+    const roomBooked = bookings.some(
+        (booking) => booking.roomId === roomId && booking.date === date &&
+        ((startTime >= booking.startTime && startTime < booking.endTime) || 
+        (endTime > booking.startTime && endTime <= booking.endTime))
+    );
+
+    if (roomBooked) {
+        return res.status(400).json({ message: "Room is already booked for the selected time." });
+    }
+
+    const booking = { customerName, date, startTime, endTime, roomId };
+    bookings.push(booking);
+    res.status(201).json({ message: "Room booked", booking });
+});
+
+// 3. List all rooms
+app.get('/rooms', (req, res) => {
+    res.json(rooms);
+});
+
+// 4. List all bookings
+app.get('/bookings', (req, res) => {
+    res.json(bookings);
+});
+
+
+app.listen(() => {
+    console.log(`Server running on port 3001`);
+});
+
+
+
+
+
+
