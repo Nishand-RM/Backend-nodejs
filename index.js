@@ -5,80 +5,92 @@ app.use(express.json());
 let rooms = [];
 let bookings = [];
 
-// 1. Create a Room
+// Create Room
 app.post('/create-room', (req, res) => {
-    const { roomName, seats, amenities, pricePerHour } = req.body;
-    const newRoom = { id: rooms.length + 1, roomName, seats, amenities, pricePerHour, booked: false };
+    const { name, seats, amenities, pricePerHour } = req.body;
+    const newRoom = { id: rooms.length + 1, name, seats, amenities, pricePerHour, booked: false };
     rooms.push(newRoom);
-    res.status(201).send(newRoom);
+    res.status(201).send('Room created successfully');
 });
 
-// 2. Book a Room
+
+// Book Room
 app.post('/book-room', (req, res) => {
     const { customerName, date, startTime, endTime, roomId } = req.body;
 
-    // Check if room is already booked for the given date/time
-    const isBooked = bookings.find(booking => booking.roomId === roomId && booking.date === date &&
-        ((startTime >= booking.startTime && startTime < booking.endTime) ||
-        (endTime > booking.startTime && endTime <= booking.endTime)));
+    const room = rooms.find(r => r.id === roomId);
+    if (!room) return res.status(404).send('Room not found');
+    
+    const isBooked = bookings.find(b => b.roomId === roomId && b.date === date && 
+        ((startTime >= b.startTime && startTime <= b.endTime) || 
+        (endTime >= b.startTime && endTime <= b.endTime)));
+    
+    if (isBooked) return res.status(400).send('Room is already booked for the selected time');
 
-    if (isBooked) {
-        return res.status(400).send("Room is already booked for the selected date and time.");
-    }
+    const booking = { id: bookings.length + 1, customerName, date, startTime, endTime, roomId };
+    bookings.push(booking);
+    room.booked = true;
 
-    const newBooking = { 
-        id: bookings.length + 1, customerName, date, startTime, endTime, roomId 
-    };
-    bookings.push(newBooking);
-    res.status(201).send(newBooking);
+    res.status(201).send('Room booked successfully');
 });
 
-// 3. List all Rooms with Booking Data
+
+// List all rooms with booking details
 app.get('/rooms', (req, res) => {
     const roomData = rooms.map(room => {
-        const roomBookings = bookings.filter(booking => booking.roomId === room.id);
+        const booking = bookings.find(b => b.roomId === room.id);
         return {
-            roomName: room.roomName,
-            bookedStatus: roomBookings.length > 0,
-            bookings: roomBookings
+            roomName: room.name,
+            bookedStatus: room.booked,
+            customerName: booking ? booking.customerName : 'N/A',
+            date: booking ? booking.date : 'N/A',
+            startTime: booking ? booking.startTime : 'N/A',
+            endTime: booking ? booking.endTime : 'N/A'
         };
     });
-    res.status(200).send(roomData);
+    res.send(roomData);
 });
 
-// 4. List all Customers with Booking Data
+// List all customers with booking details
 app.get('/customers', (req, res) => {
     const customerData = bookings.map(booking => {
-        const room = rooms.find(room => room.id === booking.roomId);
+        const room = rooms.find(r => r.id === booking.roomId);
         return {
             customerName: booking.customerName,
-            roomName: room.roomName,
+            roomName: room.name,
             date: booking.date,
             startTime: booking.startTime,
             endTime: booking.endTime
         };
     });
-    res.status(200).send(customerData);
+    res.send(customerData);
 });
 
-// 5. List Customer's Booking History
-app.get('/customer-bookings/:customerName', (req, res) => {
-    const customerName = req.params.customerName;
-    const customerBookings = bookings.filter(booking => booking.customerName === customerName);
-    const bookingHistory = customerBookings.map(booking => {
-        const room = rooms.find(room => room.id === booking.roomId);
+
+// Customer booking history
+app.get('/customer-history/:customerName', (req, res) => {
+    const { customerName } = req.params;
+    console.log("Received customer name:", customerName); 
+    const customerBookings = bookings.filter(b => b.customerName === customerName);
+
+    if (customerBookings.length === 0) return res.status(404).send('No bookings found for this customer');
+
+    const history = customerBookings.map(b => {
+        const room = rooms.find(r => r.id === b.roomId);
         return {
-            customerName,
-            roomName: room.roomName,
-            date: booking.date,
-            startTime: booking.startTime,
-            endTime: booking.endTime,
-            bookingId: booking.id
+            customerName: b.customerName,
+            roomName: room.name,
+            date: b.date,
+            startTime: b.startTime,
+            endTime: b.endTime,
+            bookingId: b.id,
+            bookingDate: b.date,
+            bookingStatus: room.booked ? 'Confirmed' : 'Cancelled'
         };
     });
-    res.status(200).send(bookingHistory);
+    res.send(history);
 });
 
-// Start Server
-
-app.listen( () => console.log(`Server running on port 3001`));
+app.listen(3001, () => {
+    console.log('Server running on port 3001');
+});
