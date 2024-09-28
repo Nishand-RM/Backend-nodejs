@@ -4,12 +4,12 @@ const app = require('./app');
 
 
 
-//import dotenv
-require('dotenv').config();
+
 
 const mongoose = require('mongoose');
+const { MONGODB_URI } = require('./utils/config');
 
-mongoose.connect(process.env.MONGODB_URI)
+mongoose.connect(MONGODB_URI)
 .then(()=>{
     console.log("connected to mongo db");
     app.listen(3001, () => {
