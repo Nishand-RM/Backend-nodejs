@@ -1,96 +1,118 @@
-let companies = [
-    {
-        id:1,
-        name:"Google",
-        location:"chennai",
-        email:"carrer@google.com"
-    
-    },
-    {
-        id:2,
-        name:"Facebook",
-        location:"Banglore",
-        email:"carrer@Facebook.com" 
-    },
-    {
-        id:3,
-        name:"IBM",
-        location:"Chennai",
-        email:"carrer@IBM.com"
-    }
-];
+//import company 
+
+const Company = require('../model/company');
+
+
 
 
 const companyController = {
 
-    getCompanies: (req,res)=>{
-    
-    res.json(companies);
+    getCompanies: async (req, res) => {
+        try {
+            const companies = await Company.find();
+            res.status(200).json(companies);
+        } catch (error) {
+            res.json({ message: "failed" })
+        }
     },
 
-    SearchCompanies: (req,res)=>{
-        const {id,name,location} = req.query;
-        let company;
-        if(id){
-            company = companies.find(com=> com.id === id);
+    SearchCompanies:async (req, res) => {
+        try{
+        
+           const {name,location} = req.query;
+           
+           const companies = await Company.find({
+            $or:[
+                {
+                    name:{
+                        $regex :name,
+                        $options :'i'
+                    }
+                },
+                {
+                    location:{
+                        $regex:location,
+                        $options:'i'
+                    } 
+                },
+            ]
+           });
+        
+    
+        res.json(companies);
+        }catch(error){
+            res.status(500).json({message:"failed"})
         }
-    
-        if(location && !name){
-            company = companies.filter(com => com.location.toLocaleLowerCase() === location.toLocaleLowerCase());
-    
-        }
-    
-        if(location && name){
-            company = companies.filter(com => com.location.toLocaleLowerCase() === location.toLocaleLowerCase());
-    
-            company = companies.filter(com => com.name.toLocaleLowerCase() === name.toLocaleLowerCase());
-    
-        }
-    
-        if(!company){
-            res.json({message:"company details not matched"});
-    
-        }
-    
-        res.json(company);
-    
-    
+
     },
 
-    ParticularCompany :(req,res)=>{
-        const id = parseInt(req.params.id);
-    
-        const company = companies.find(com=> com.id === id);
-    
-        if(!company){
-            res.json({message:"company not found"});
+    ParticularCompany: async (req, res) => {
+
+        try {
+            const { id } = req.params;
+            const company = await Company.findById(id);
+
+            if (!company) {
+                res.json({ message: "company not found" });
+            }
+
+            res.json(company);
+        } catch (error) {
+            res.status(500).json({ message: "failed to fetch company by id" });
         }
-    
-        res.json(company);
-    },
-     
-    createCompany : (req,res)=>{
 
-        const comp = req.body;
-        comp.id = companies[companies.length - 1].id + 1;
-        companies.push(comp);
-        res.json({message:"company created successfully"});
     },
 
-    UpdateCompany : (req,res)=>{
-        const id = parseInt(req.params.id);
-        const { name } = req.body;
-        const company = companies.find(com => com.id === id);
-        company.name = name;
-        companies = companies.map(com => com.id === id ? company : com);
-        res.json({message:"updated successfully"});
+    createCompany: async (req, res) => {
+        try {
+            const company = req.body;
+
+            //create a new company 
+            const newCompany = new Company(company);
+
+            //save the comapny
+            const SavedCompany = await newCompany.save();
+            res.json({ message: "company created successfully", company: SavedCompany });
+
+        } catch (error) {
+            res.status(500).json({ message: "failed to create company" });
+        }
+
     },
 
-    DeleteCompany :(req,res)=>{
-        const id = parseInt(req.params.id);
-    
-        companies = companies.filter(com => com.id !== id);
-        res.json({message:"deleted successfully"});
+    UpdateCompany: async (req, res) => {
+        try {
+            const { id } = req.params;
+            const { name, location, email, phone, website } = req.body;
+
+            const companyToupdate = {
+                name,
+                location,
+                email,
+                phone,
+                website
+            }
+
+            const UpdateCompany = await Company.findByIdAndUpdate(id, companyToupdate);
+            res.json({ message: "updated successfully" });
+
+
+        } catch (error) {
+            res.status(500).json({ message: "comapny not updated" })
+        }
+
+    },
+
+    DeleteCompany: async (req, res) => {
+        try {
+            const { id } = req.params;
+            await Company.findByIdAndDelete(id);
+        } catch (error) {
+            res.status(500).json({ message: "failed to delete" });
+        }
+
+
+
     },
 
 
