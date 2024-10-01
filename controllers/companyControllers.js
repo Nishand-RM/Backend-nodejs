@@ -9,7 +9,7 @@ const companyController = {
 
     getCompanies: async (req, res) => {
         try {
-            const companies = await Company.find();
+            const companies = await Company.find().populate('jobs','-companyId -_v');
             res.status(200).json(companies);
         } catch (error) {
             res.json({ message: "failed" })
@@ -17,32 +17,25 @@ const companyController = {
     },
 
     SearchCompanies:async (req, res) => {
-        try{
         
-           const {name,location} = req.query;
-           
+        
+           const {query} = req.query;
+           const regex = new RegExp(query,'i');
            const companies = await Company.find({
             $or:[
                 {
-                    name:{
-                        $regex :name,
-                        $options :'i'
-                    }
+                    name:regex
+                        
+                    
                 },
                 {
-                    location:{
-                        $regex:location,
-                        $options:'i'
-                    } 
+                    location:regex
                 },
             ]
-           });
+           }).lean();
         
     
-        res.json(companies);
-        }catch(error){
-            res.status(500).json({message:"failed"})
-        }
+        res.status(500).json(companies);
 
     },
 

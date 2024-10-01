@@ -14,7 +14,13 @@ const CompanySchema = new mongoose.Schema({
     UpdatedAt:{
         type: Date,
         default:Date.now
-    }
+    },
+    jobs:[
+        {
+            type:mongoose.Schema.Types.ObjectId,
+            ref:'Job'
+        }
+    ]
 })
 
 //create  a model and export
