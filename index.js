@@ -3,9 +3,6 @@
 const app = require('./app');
 
 
-
-
-
 const mongoose = require('mongoose');
 const { MONGODB_URI } = require('./utils/config');
 
